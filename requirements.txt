@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+streamlit
+PyMuPDF
+sentence-transformers
+transformers
+torch
+numpy
+faiss-cpu
+langchain-google-genai
+azure-cognitiveservices-speech 
+pydub
