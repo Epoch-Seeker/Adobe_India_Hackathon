@@ -90,7 +90,7 @@ export function PDFViewer({
       if (!viewerRef.current || !pdfUrl) return;
 
       const adobeDCView = new window.AdobeDC.View({
-        clientId: "1d9051c3009948f584b461fb6ccf60fb",
+        clientId: "03c8c824105148a2af6f264c19905fb7",
         divId: viewerRef.current.id,
       });
 

@@ -1,4 +1,3 @@
-
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
@@ -31,7 +30,7 @@
     --chart-4: 210 100% 80%;
     --chart-5: 210 100% 90%;
     --radius: 0.75rem;
-    
+
     /* Custom colors */
     --sidebar-bg: 210 30% 97%;
     --sidebar-border: 210 20% 88%;
@@ -67,7 +66,7 @@
     --chart-3: 210 100% 80%;
     --chart-4: 210 100% 90%;
     --chart-5: 210 100% 95%;
-    
+
     /* Custom colors - dark mode */
     --sidebar-bg: 210 30% 5%;
     --sidebar-border: 210 20% 12%;

@@ -8,7 +8,7 @@ load_dotenv()
 
 # Initialize Gemini 2.5 Flash
 model = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
+    model= os.getenv("GEMINI_MODEL"),
     temperature=0.7,
     google_api_key=os.getenv("GOOGLE_API_KEY")
 )
@@ -19,22 +19,22 @@ def generate_podcast_script(user_text: str, combined_text: str) -> str:
     user_text (task/topic) and combined_text (docs+insights).
     """
     prompt = f"""
-You are a podcast scriptwriter.
-Create a podcast conversation between two speakers (S1 and S2).
-The conversation should be engaging, informative, and easy to follow.
-Use the following sources for context:
----
-User request: {user_text}
-Document insights & counterpoints: {combined_text}
----
+        You are a podcast scriptwriter.
+        Create a podcast conversation between two speakers (Speaker 1 and Speaker 2).
+        The conversation should be engaging, informative, and easy to follow.
+        Use the following sources for context:
+        ---
+        User request: {user_text}
+        Document, insights & counterpoints: {combined_text}
+        ---
 
-Format strictly like this:
-Speaker 1: ...
-Speaker 2: ...
-Speaker 1: ...
-Speaker 2: ...
-End the script naturally.
-    """
+        Format strictly like this:
+        Speaker 1: ...
+        Speaker 2: ...
+        Speaker 1: ...
+        Speaker 2: ...
+        End the script naturally.
+            """
 
     response = model.invoke([HumanMessage(content=prompt)])
     
@@ -59,80 +59,12 @@ def generate_did_you_know(text : str):
 
     return full_output
 
-
-def gemini_generate_insights(chunk, persona, task):
-    """
-    Generate structured insights + podcast script from Gemini 2.5 Flash.
-    """
-    prompt = f"""
-    As a {persona} whose goal is to {task}, analyze the following content and produce output in EXACTLY this structure:
-
-    ===KEY_INSIGHTS===
-    - 5 to 7 concise, high-value insights.
-
-    ===DID_YOU_KNOW===
-    - 2 to 4 surprising or less obvious "Did you know?" style facts.
-
-    ===CONTRADICTIONS===
-    - List contradictions, disagreements, or counterpoints (if any).
-    - If none, write "None found".
-
-    ===DOC_REFERENCES===
-    - Mention which sections, ideas, or topics from the documents seem most useful/relevant.
-
-    ===PODCAST===
-    Speaker 1: ...
-    Speaker 2: ...
-    Speaker 1: ...
-    (Natural back-and-forth covering the above insights, facts, contradictions, and story-like summary in ~2 minutes of speech.)
-    
-    Content:
-    {chunk.get('refined_text', '')}
-    """
-
-    response = model.invoke([HumanMessage(content=prompt)])
-    full_output = response.content.strip()
-
-    # Initialize structured sections
-    key_insights, did_you_know, contradictions, docs, podcast_script = [], [], [], [], ""
-
-    # Extract sections safely
-    def extract_section(text, start, end=None):
-        if start not in text:
-            return ""
-        section = text.split(start, 1)[1]
-        if end and end in section:
-            section = section.split(end, 1)[0]
-        return section.strip()
-
-    key_insights = [
-        line.strip("- ").strip() for line in extract_section(full_output, "===KEY_INSIGHTS===", "===DID_YOU_KNOW===").split("\n") if line.strip()
-    ]
-    did_you_know = [
-        line.strip("- ").strip() for line in extract_section(full_output, "===DID_YOU_KNOW===", "===CONTRADICTIONS===").split("\n") if line.strip()
-    ]
-    contradictions = [
-        line.strip("- ").strip() for line in extract_section(full_output, "===CONTRADICTIONS===", "===DOC_REFERENCES===").split("\n") if line.strip()
-    ]
-    docs = [
-        line.strip("- ").strip() for line in extract_section(full_output, "===DOC_REFERENCES===", "===PODCAST===").split("\n") if line.strip()
-    ]
-    podcast_script = extract_section(full_output, "===PODCAST===")
-
-    return {
-        "key_insights": key_insights,
-        "did_you_know": did_you_know,
-        "contradictions": contradictions,
-        "docs": docs,
-        "podcast_script": podcast_script
-    }
-
-
 def model_answer(base_query: str, chunks: list) -> str:
     """
     Generates a general answer to the query by looking at all document section titles
     and selecting only the most useful ones for later cosine similarity search.
     """
+    # {'doc_name': '...', 'page_num': 1, 'title': '...', 'content': "..."}
     all_titles = [chunk["title"] for chunk in chunks if chunk.get("title")]
     titles_text = "\n".join(f"- {t}" for t in all_titles)
 
@@ -150,7 +82,6 @@ def model_answer(base_query: str, chunks: list) -> str:
 
     response = model.invoke([HumanMessage(content=prompt)])
     return response.content.strip()
-
 
 def generate_key_insights(text : str):
     # Build prompt only for key insights
