@@ -7,10 +7,11 @@ import uuid
 from datetime import datetime, timezone
 from pydantic import BaseModel
 from typing import List
+from fastapi.staticfiles import StaticFiles
 
 from .models import load_models
 from .document_utils import parse_documents_structurally, merge_chunks_with_empty_titles
-from .analyzer import rank_sections 
+from .analyzer import  build_faiss_index , semantic_search
 from utils.gemini_model import model_answer , generate_key_insights , generate_counterpoints , generate_podcast_script , generate_did_you_know
 from podcast import create_podcast_from_script
  
@@ -31,7 +32,7 @@ app.add_middleware(
 )
 
 # ---------- Endpoints ----------
-@app.post("/upload/")
+@app.post("/upload/")#done
 async def upload_file(file: UploadFile = File(...)):
     os.makedirs("input", exist_ok=True)
     file_path = os.path.join("input", file.filename)
@@ -39,7 +40,7 @@ async def upload_file(file: UploadFile = File(...)):
         f.write(await file.read())
     return {"filename": file.filename, "path": file_path}
 
-@app.post("/delete_old/")
+@app.post("/delete_old/")#done
 async def delete_old():
     folder = "input"    
     if not os.path.exists(folder):
@@ -57,7 +58,25 @@ async def delete_old():
         "deleted_files": deleted_files
     }
 
-@app.post("/analyze/")
+@app.post("/delete_old_audio/")#done
+async def delete_old_audio():
+    folder = "output/audio"
+    if not os.path.exists(folder):
+        return {"message": "Audio folder does not exist."}
+
+    deleted_files = []
+    for old_file in os.listdir(folder):
+        old_path = os.path.join(folder, old_file)
+        if os.path.isfile(old_path):
+            os.remove(old_path)
+            deleted_files.append(old_file)
+
+    return {
+        "message": "All old audio files deleted successfully.",
+        "deleted_files": deleted_files
+    }
+
+@app.post("/analyze/")#done
 async def analyze_pdfs(request: Request):
     form = await request.form()
     raw_json = form.get("input_json")
@@ -79,41 +98,41 @@ async def analyze_pdfs(request: Request):
 
     file_paths = [file_map[doc["filename"]] for doc in documents]
 
+    # --- your existing logic ---
     chunks = parse_documents_structurally(file_paths)
     chunks = merge_chunks_with_empty_titles(chunks)
-
     base_query = f"As a {persona}, my goal is to {task}."
-    general_answer = model_answer(base_query, chunks)
-    ranked_chunks = rank_sections(general_answer, chunks, embedding_model)
+
+    index, all_sentences, sentence_meta = build_faiss_index(chunks , embedding_model)
+    relevant_sentences = semantic_search(embedding_model , base_query, index, all_sentences, sentence_meta, top_k=50, threshold=0.6)
+
+    # Group sentences by document and title
+    doc_map = {}
+    for i, sentence in enumerate(relevant_sentences):
+        doc_name = sentence["document"]
+        if doc_name not in doc_map:
+            doc_map[doc_name] = {
+                "filename": doc_name,
+                "sections": []
+            }
+        doc_map[doc_name]["sections"].append({
+            "title": sentence["section_title"],
+            "page": sentence["page_number"],
+            "importance_rank": i + 1,  # rank by FAISS score order
+            "content": sentence["refined_text"],
+            "relevance_score": round(sentence["score"], 3)
+        })
 
     output = {
-        "metadata": {
-            "input_documents": [doc["filename"] for doc in documents],
-            "persona": persona,
-            "job_to_be_done": task,
-            "processing_timestamp": datetime.now(timezone.utc).isoformat()
-        },
-        "extracted_sections": [
-            {
-                "document": chunk["doc_name"],
-                "page_number": chunk["page_num"],
-                "section_title": chunk["title"],
-                "importance_rank": chunk["importance_rank"]
-            } for chunk in ranked_chunks
-        ],
-        "sub_section_analysis": [
-            {
-                "document": chunk["doc_name"],
-                "section_title": chunk["title"],
-                "page_number": chunk["page_num"],
-                "refined_text": chunk["content"]
-            } for chunk in ranked_chunks
-        ]
+        "persona": persona,
+        "task": task,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "documents": list(doc_map.values())
     }
 
     return JSONResponse(content=output)
 
-@app.post("/analyze/text/")
+@app.post("/analyze/text/")#done
 async def analyze_pdfs_text(request: Request):
     form = await request.form()
     raw_json = form.get("input_json")
@@ -129,39 +148,14 @@ async def analyze_pdfs_text(request: Request):
     chunks = parse_documents_structurally(file_paths)
     chunks = merge_chunks_with_empty_titles(chunks)
 
-    base_query = f"Find and return the most relevant and important titles related to {text}. Focus on accuracy, reliability, and context."
+    index, all_sentences, sentence_meta = build_faiss_index(chunks , embedding_model)
+    output_chunks = semantic_search( embedding_model , text, index, all_sentences, sentence_meta, top_k=10, threshold=0.65)
 
-    general_answer = model_answer(base_query, chunks)
-    ranked_chunks = rank_sections(general_answer, chunks, embedding_model)
 
-    output = {
-        # "extracted_sections": [
-        #     {
-        #         "document": chunk["doc_name"],
-        #         "page_number": chunk["page_num"],
-        #         "section_title": chunk["title"],
-        #         "importance_rank": chunk["importance_rank"]
-        #     } for chunk in ranked_chunks
-        # ],
-        "sub_section_analysis": [
-            {
-                "document": chunk["doc_name"],
-                "section_title": chunk["title"],
-                "page_number": chunk["page_num"],
-                "refined_text": chunk["content"]
-            } for chunk in ranked_chunks
-        ]
-    }
-
-    # output_path = os.path.join("output", f"{uuid.uuid4()}.json")
-    # os.makedirs("output", exist_ok=True)
-    # with open(output_path, "w", encoding="utf-8") as f:
-    #     json.dump(output, f, indent=4, ensure_ascii=False)
-    # print(output)
-
+    output = {"sub_section_analysis": output_chunks}
     return JSONResponse(content=output)
 
-@app.post("/generate_key_insights/")
+@app.post("/generate_key_insights/")#done
 async def generate_apikey_insights(request: Request):
     form = await request.form()
     raw_json = form.get("input_json")
@@ -178,10 +172,11 @@ async def generate_apikey_insights(request: Request):
         for line in full_output.split("\n")
         if line.strip()
     ]
+    # print(key_insights)
 
     return JSONResponse(content={"key_insights": key_insights})
 
-@app.post("/did_you_know/")
+@app.post("/did_you_know/")#done
 async def did_you_know(request: Request):
     form = await request.form()
     raw_json = form.get("input_json")
@@ -196,10 +191,11 @@ async def did_you_know(request: Request):
         for line in full_output.split("\n")
         if line.strip()
     ]
+    # print(result)
 
     return JSONResponse(content={"did_you_know": result})
 
-@app.post("/generate_contradictions/")
+@app.post("/generate_contradictions/")#done
 async def generate_contradictions(request: Request):
     form = await request.form()
     raw_json = form.get("input_json")
@@ -219,9 +215,10 @@ async def generate_contradictions(request: Request):
             for line in full_output.split("\n")
             if line.strip()
         ]
+    # print(result)
     return JSONResponse(content={"contradictions": result})
 
-@app.post("/generate_podcast/")
+@app.post("/generate_podcast/")#done
 async def generate_podcast(request: Request):
     form = await request.form()
     raw_json = form.get("input_json")
@@ -234,8 +231,8 @@ async def generate_podcast(request: Request):
     chunks = parse_documents_structurally(file_paths)
     chunks = merge_chunks_with_empty_titles(chunks)
 
-    general_answer = model_answer(text, chunks)
-    ranked_chunks = rank_sections(general_answer, chunks, embedding_model) 
+    index, all_sentences, sentence_meta = build_faiss_index(chunks , embedding_model)
+    output_chunks = semantic_search( embedding_model , text, index, all_sentences, sentence_meta, top_k=10, threshold=0.65)
     
     # ----- Step 2: Key Insights -----
     insights_output = generate_key_insights(text)
@@ -259,11 +256,11 @@ async def generate_podcast(request: Request):
     # ----- Step 4: Combine everything -----
     combined_parts = []
 
-    for chunk in ranked_chunks:
+    for chunk in output_chunks:
         part = (
-            f"📄 Document: {chunk['doc_name']}\n"
-            f"🔖 Title: {chunk['title']}\n"
-            f"📝 Content:\n{chunk['content']}\n"
+            f"📄 Document: {chunk['document']}\n"
+            f"🔖 Title: {chunk['section_title']}\n"
+            f"📝 Content:\n{chunk['refined_text']}\n"
             "--------------------------------------\n"
         )
         combined_parts.append(part)
@@ -289,9 +286,40 @@ async def generate_podcast(request: Request):
         "podcast_file": f"/get_audio/{os.path.basename(podcast_audio_path)}" if podcast_audio_path else None
     })
 
-@app.get("/get_audio/{filename}")
+@app.post("/generate_podcast_role/")#done
+async def gnerate_podcast_role(request: Request):
+    form = await request.form()
+    raw_json = form.get("input_json")
+    input_json = json.loads(raw_json)
+
+    text = input_json["role"]
+    detail = input_json["detail"]
+
+    podcast_script: str = generate_podcast_script(
+        user_text= text , combined_text=detail
+    )
+    # print(podcast_script)
+    podcast_file_path = os.path.join("output/audio", f"podcast_{uuid.uuid4()}.mp3")
+    podcast_audio_path = create_podcast_from_script(podcast_script, podcast_file_path)
+    print(podcast_audio_path)
+
+    # ----- Step 2: Return Only Podcast -----
+    return JSONResponse(content={
+        "podcast_script": podcast_script,
+        "podcast_file": f"/get_audio/{os.path.basename(podcast_audio_path)}" if podcast_audio_path else None
+    })
+
+@app.get("/get_audio/{filename}")#done
 def get_audio(filename: str):
     file_path = os.path.join("output/audio", filename)
     if os.path.exists(file_path):
         return FileResponse(file_path, media_type="audio/mpeg")
     return JSONResponse({"error": "File not found"}, status_code=404)
+
+# # Serve assets
+# app.mount("/assets", StaticFiles(directory="frontend_build/assets"), name="assets")
+
+# # Serve main index.html
+# @app.get("/")
+# async def serve_index():
+#     return FileResponse("frontend_build/index.html")

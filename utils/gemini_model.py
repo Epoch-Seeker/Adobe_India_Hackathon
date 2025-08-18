@@ -3,68 +3,88 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage
 
-# Load environment variables
+# Load environment variables from .env
 load_dotenv()
 
-# Initialize Gemini 2.5 Flash
-model = ChatGoogleGenerativeAI(
-    model= os.getenv("GEMINI_MODEL"),
-    temperature=0.7,
-    google_api_key=os.getenv("GOOGLE_API_KEY")
-)
+"""
+Unified LLM Module (Google Gemini only)
 
-def generate_podcast_script(user_text: str, combined_text: str) -> str:
-    """
-    Generate a podcast script between two speakers using
-    user_text (task/topic) and combined_text (docs+insights).
-    """
-    prompt = f"""
-        You are a podcast scriptwriter.
-        Create a podcast conversation between two speakers (Speaker 1 and Speaker 2).
-        The conversation should be engaging, informative, and easy to follow.
-        Use the following sources for context:
-        ---
-        User request: {user_text}
-        Document, insights & counterpoints: {combined_text}
-        ---
+Functions available:
+- get_llm() -> returns an initialized Gemini chat model
+- get_llm_response(messages) -> quick raw chat interface
+- generate_podcast_script(user_text, combined_text)
+- generate_did_you_know(text)
+- model_answer(base_query, chunks)
+- generate_key_insights(text)
+- generate_counterpoints(text)
+"""
 
-        Format strictly like this:
-        Speaker 1: ...
-        Speaker 2: ...
-        Speaker 1: ...
-        Speaker 2: ...
-        End the script naturally.
-            """
+# ---------------- Core Model Selector ---------------- #
+def get_llm():
+    api_key = os.getenv("GOOGLE_API_KEY")
+    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
-    response = model.invoke([HumanMessage(content=prompt)])
-    
+    if not api_key and not credentials_path:
+        raise ValueError("Either GOOGLE_API_KEY or GOOGLE_APPLICATION_CREDENTIALS must be set.")
+
+    if api_key:
+        return ChatGoogleGenerativeAI(model=model_name, google_api_key=api_key, temperature=0.7)
+    else:
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+        return ChatGoogleGenerativeAI(model=model_name, temperature=0.7)
+
+
+def get_llm_response(messages):
+    llm = get_llm()
+    response = llm.invoke(messages)
     return response.content
 
-def generate_did_you_know(text : str):
+
+# ---------------- Helper Functions ---------------- #
+def generate_podcast_script(user_text: str, combined_text: str) -> str:
+    prompt = f"""
+    You are a podcast scriptwriter.
+    Create a podcast conversation between two speakers (Speaker 1 and Speaker 2).
+    The conversation should be engaging, informative, and easy to follow.
+    Use the following sources for context:
+    ---
+    User request: {user_text}
+    Document, insights & counterpoints: {combined_text}
+    ---
+
+    Format strictly like this:
+    Speaker 1: ...
+    Speaker 2: ...
+    Speaker 1: ...
+    Speaker 2: ...
+    End the script naturally.
+    """
+    llm = get_llm()
+    response = llm.invoke([HumanMessage(content=prompt)])
+    return response.content
+
+
+def generate_did_you_know(text: str):
     prompt = f"""
     You are a smart assistant that generates short, engaging "Did you know?" facts.
 
     Instructions:
     - Use the provided text as inspiration.
-    - give atleast 2 did you knows . you can give more also.
+    - give at least 2 did you knows (you can give more also).
     - If possible, connect the fact to general knowledge related to the text.
-    - Always start with: Did you know? ...
+    - Always start with: 💡Did you know? ...
     - If no meaningful or factual point can be made, respond exactly with:
     "There is no available fact for selected text"
 
     Text: {text}
     """
-    response = model.invoke([HumanMessage(content=prompt)])
-    full_output = response.content.strip()
+    llm = get_llm()
+    response = llm.invoke([HumanMessage(content=prompt)])
+    return response.content.strip()
 
-    return full_output
 
 def model_answer(base_query: str, chunks: list) -> str:
-    """
-    Generates a general answer to the query by looking at all document section titles
-    and selecting only the most useful ones for later cosine similarity search.
-    """
-    # {'doc_name': '...', 'page_num': 1, 'title': '...', 'content': "..."}
     all_titles = [chunk["title"] for chunk in chunks if chunk.get("title")]
     titles_text = "\n".join(f"- {t}" for t in all_titles)
 
@@ -75,16 +95,16 @@ def model_answer(base_query: str, chunks: list) -> str:
         f"1. From the above list, identify only the titles that are most relevant and useful for answering this query:\n'{base_query}'.\n"
         f"2. Ignore titles that are generic, unrelated, or low-value for this query.\n"
         f"3. Based *only* on the most relevant titles you selected, write a concise, high-level answer to the query.\n"
-        f"4. Ensure your answer includes specific wording and key phrases from the selected titles, so that embedding-based similarity search will match these titles to the relevant original document sections.\n"
+        f"4. Ensure your answer includes specific wording and key phrases from the selected titles, so embedding similarity matches.\n"
         f"5. Do not invent new topics beyond what appears in the selected titles.\n\n"
         f"Now, give your answer:"
     )
-
-    response = model.invoke([HumanMessage(content=prompt)])
+    llm = get_llm()
+    response = llm.invoke([HumanMessage(content=prompt)])
     return response.content.strip()
 
-def generate_key_insights(text : str):
-    # Build prompt only for key insights
+
+def generate_key_insights(text: str):
     prompt = f"""
     Analyze the following content and extract **5 to 7 concise, high-value insights**. 
     Focus on clarity, reliability, and actionable meaning.
@@ -95,28 +115,23 @@ def generate_key_insights(text : str):
     Content:
     {text}
     """
+    llm = get_llm()
+    response = llm.invoke([HumanMessage(content=prompt)])
+    return response.content.strip()
 
-    # Call model
-    response = model.invoke([HumanMessage(content=prompt)])
-    full_output = response.content.strip()
 
-    return full_output
-
-def generate_counterpoints(text : str):
-    # Prompt for contradictions
+def generate_counterpoints(text: str):
     prompt = f"""
-    Analyze the following content and identify contradictions, counterpoints, or opposing perspectives and 
-    give me in brief.
-    give output in pure plain english not in markdown form.
+    Analyze the following content and identify contradictions, counterpoints, or opposing perspectives 
+    and give me in brief.
+    Output in pure plain English (not markdown).
     
     - If there are genuine counterpoints, list them clearly.
 
     Content:
     {text}
     """
+    llm = get_llm()
+    response = llm.invoke([HumanMessage(content=prompt)])
+    return response.content.strip()
 
-    # Call model
-    response = model.invoke([HumanMessage(content=prompt)])
-    full_output = response.content.strip()
-
-    return full_output

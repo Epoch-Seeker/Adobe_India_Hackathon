@@ -22,7 +22,7 @@ export const PDFUpload = forwardRef<HTMLInputElement, PDFUploadProps>(
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch("http://localhost:8000/upload/", {
+        const res = await fetch("http://localhost:8080/upload/", {
           method: "POST",
           body: formData,
         });

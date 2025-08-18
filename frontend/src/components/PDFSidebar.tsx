@@ -53,24 +53,26 @@ export function PDFSidebar({
       </div>
 
       {/* PDF List */}
-      <div className="flex-1 overflow-hidden">
-        <div className="p-4">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="p-4 pb-2">
           <h3 className="text-sm font-semibold text-foreground mb-3">
             Documents
           </h3>
+        </div>
+        <div className="flex-1 overflow-hidden px-4 pb-4">
           {uploadedFiles.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="mx-auto h-12 w-12 mb-3 opacity-50" />
               <p className="text-sm">No PDFs uploaded yet</p>
             </div>
           ) : (
-            <ScrollArea className="h-full">
-              <div className="space-y-2">
+            <div className="h-full overflow-y-auto">
+              <div className="space-y-2 pr-2">
                 {uploadedFiles.map((file) => (
                   <div
                     key={file.id}
                     className={cn(
-                      "group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 border w-full",
+                      "group flex items-center gap-3 p-3 rounded-lg cursor-pointer border w-full min-w-0",
                       currentPDF?.id === file.id
                         ? "bg-primary/10 border-primary/20 text-primary"
                         : "hover:bg-secondary/50 border-transparent text-foreground"
@@ -78,13 +80,16 @@ export function PDFSidebar({
                     onClick={() => onFileSelect(file)}
                   >
                     <FileText className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-sm font-medium truncate min-w-0 flex-1">
+                    <span
+                      className="text-sm font-medium truncate min-w-0 flex-1"
+                      title={file.name}
+                    >
                       {file.name}
                     </span>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 w-6 p-0 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                      className="h-6 w-6 p-0 flex-shrink-0 opacity-30 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive ml-auto"
                       onClick={(e) => {
                         e.stopPropagation();
                         onFileRemove(file.id);
@@ -95,7 +100,7 @@ export function PDFSidebar({
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           )}
         </div>
       </div>

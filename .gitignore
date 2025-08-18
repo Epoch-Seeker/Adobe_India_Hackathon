@@ -1,7 +1,6 @@
 .env
 
 output/*
-audio.py
 # Logs
 logs
 *.log

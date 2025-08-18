@@ -1,0 +1,11 @@
+__pycache__/
+node_modules/
+frontend/node_modules/
+*.log
+*.pyc
+*.pyo
+*.pyd
+*.db
+.env
+output/
+input/

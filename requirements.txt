@@ -1,12 +1,25 @@
-fastapi
-uvicorn
-streamlit
-PyMuPDF
-sentence-transformers
-transformers
-torch
-numpy
-faiss-cpu
-langchain-google-genai
-azure-cognitiveservices-speech 
-pydub
+# Web framework
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+
+# PDF processing
+PyMuPDF==1.24.7
+
+# ML / NLP
+torch==2.3.1+cpu
+torchvision==0.18.1+cpu
+torchaudio==2.3.1+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+transformers==4.42.4
+sentence-transformers==3.0.1
+
+# LangChain + Google Generative AI
+langchain==0.2.11
+langchain-google-genai==1.0.6
+
+# Audio
+gTTS==2.5.1
+pydub==0.25.1
+
+nltk

@@ -4,9 +4,10 @@ import re
 from gtts import gTTS
 from pydub import AudioSegment
 import requests
+from io import BytesIO
 
 
-def generate_tts(text: str, voice: str, out_path: str, speaker: str = None):
+def generate_tts(text: str, voice: str, speaker: str = None) -> AudioSegment:
     """
     Generate TTS audio for a block of text.
     Supports Azure (if configured) or gTTS fallback.
@@ -29,20 +30,23 @@ def generate_tts(text: str, voice: str, out_path: str, speaker: str = None):
             timeout=30
         )
         resp.raise_for_status()
-        with open(out_path, "wb") as f:
-            f.write(resp.content)
+        return AudioSegment.from_file(BytesIO(resp.content), format="mp3")
+    
     else:
         # ---- Fallback → gTTS with regional accents ----
         if speaker == "Speaker 1":
-            # Example: US English accent
-            tts = gTTS(text=text, lang="en", tld="com")  
+            # Example: Indian English accent
+            tts = gTTS(text=text, lang="en", tld="ca")  
         else:
             # Example: UK English accent
             tts = gTTS(text=text, lang="en", tld="co.uk")
 
-        tts.save(out_path)
+        buf = BytesIO()
+        tts.write_to_fp(buf)
+        buf.seek(0)
+        return AudioSegment.from_file(buf, format="mp3")
 
-    return out_path
+    # return out_path
 
 
 def create_podcast_from_script(script_text: str, output_file: str):
@@ -76,19 +80,25 @@ def create_podcast_from_script(script_text: str, output_file: str):
 
     # Generate audio per line, keeping order
     for speaker, text in dialogue:
-        if speaker == "Speaker 1":
-            voice = "en-US-GuyNeural"
-            print("Guy selected")
-        else:
-            print("Jenny Selected")
-            voice = "en-US-JennyNeural"
+        try:
+            if speaker == "Speaker 1":
+                voice = "en-US-GuyNeural"
+                # print("Guy selected")
+            else:
+                # print("Jenny Selected")
+                voice = "en-US-JennyNeural"
 
-        temp_path = os.path.join("output/audio", f"{speaker}_{uuid.uuid4()}.mp3")
-        generate_tts(text, voice, temp_path, speaker=speaker)
-        segments.append(AudioSegment.from_file(temp_path))
+            seg = generate_tts(text, voice, speaker=speaker)
+            if seg:  # only append if valid
+                segments.append(seg)
+                # Add a short pause between speakers
+                segments.append(AudioSegment.silent(duration=400))
+            else:
+                print(f"⚠️ Skipping empty segment for: {speaker} - {text}")
 
-        # Add a short pause between speakers
-        segments.append(AudioSegment.silent(duration=400))
+        except Exception as e:
+            print(f"❌ Error generating TTS for {speaker}: {e}")
+            continue
 
     if not segments:
         raise RuntimeError("No dialogue lines parsed!")

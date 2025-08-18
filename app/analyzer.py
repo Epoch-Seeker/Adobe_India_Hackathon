@@ -1,33 +1,54 @@
+import os
 import numpy as np
+import faiss
+from nltk.tokenize import sent_tokenize
+ 
 
-def rank_sections(query: str, chunks: list, model, threshold: float = 0.3) -> list:
-    if not chunks:
-        return []
+def build_faiss_index(chunks , model):
+    """
+    Split chunks into sentences, embed them, and build a FAISS index.
+    """
+    all_sentences = []
+    sentence_meta = []  # store metadata to map back to document
 
-    # Encode query and chunks
-    query_embedding = model.encode(query, convert_to_numpy=True)
-    chunk_contents = [chunk['content'] for chunk in chunks]
-    chunk_embeddings = model.encode(chunk_contents, convert_to_numpy=True)
+    for chunk in chunks:
+        sentences = sent_tokenize(chunk["content"])
+        for sent in sentences:
+            if sent.strip():
+                all_sentences.append(sent)
+                sentence_meta.append({
+                    "doc_name": chunk["doc_name"],
+                    "page_num": chunk["page_num"],
+                    "title": chunk["title"]
+                })
 
-    # Normalize vectors for cosine similarity
-    query_norm = query_embedding / np.linalg.norm(query_embedding)
-    chunk_norms = chunk_embeddings / np.linalg.norm(chunk_embeddings, axis=1, keepdims=True)
+    embeddings = model.encode(all_sentences, convert_to_numpy=True)
+    embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)  # normalize
 
-    # Compute cosine similarity (dot product since normalized)
-    scores = np.dot(chunk_norms, query_norm)
+    dim = embeddings.shape[1]
+    index = faiss.IndexFlatIP(dim)  # cosine similarity (inner product of normalized vectors)
+    index.add(embeddings)
 
-    # Get sorted indices by similarity
-    sorted_indices = np.argsort(-scores)  # descending order
+    return index, all_sentences, sentence_meta
 
-    ranked_chunks = []
-    for rank, idx in enumerate(sorted_indices):
-        score = scores[idx]
-        if score >= threshold:  # filter by threshold
-            chunk = chunks[idx].copy()
-            chunk["score"] = float(score)
-            chunk["importance_rank"] = rank + 1
-            ranked_chunks.append(chunk)
+def semantic_search(model , query, index, all_sentences, sentence_meta, top_k=5, threshold=0.7):
+    """
+    Return the top_k most relevant sentences for the query.
+    """
+    query_emb = model.encode([query], convert_to_numpy=True)
+    query_emb = query_emb / np.linalg.norm(query_emb, axis=1, keepdims=True)
 
-    return ranked_chunks
+    D, I = index.search(query_emb, top_k)
+    results = []
 
+    for score, idx in zip(D[0], I[0]):
+        if score >= threshold:
+            results.append({
+                "document": sentence_meta[idx]["doc_name"],
+                "page_number": sentence_meta[idx]["page_num"],
+                "section_title": sentence_meta[idx]["title"],
+                "refined_text": all_sentences[idx],
+                "score": float(score)
+            })
 
+    return results[1:]

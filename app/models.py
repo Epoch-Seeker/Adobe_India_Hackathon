@@ -1,9 +1,7 @@
 import torch
 from sentence_transformers import SentenceTransformer
-from transformers import pipeline
 
-# EMBEDDING_MODEL_PATH = "models/all-MiniLM-L6-v2"
-EMBEDDING_MODEL_PATH = "models/all-mpnet-base-v2"
+EMBEDDING_MODEL_PATH = "models/all-MiniLM-L6-v2"
 
 
 def load_models():

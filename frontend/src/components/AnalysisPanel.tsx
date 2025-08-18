@@ -6,14 +6,26 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Copy, Mic, Check, Link } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface AnalysisResult {
   id: string;
   type: string;
   text: string;
-  result: string | { type: string; audioUrl: string; script: string };
+  result:
+    | string
+    | { type: string; audioUrl: string; script: string }
+    | {
+        sub_section_analysis: Array<{
+          document: string;
+          section_title: string;
+          page_number: number;
+          refined_text: string;
+        }>;
+      };
   timestamp: Date;
+  hasPersonaTask?: boolean; // Track if this analysis was done with persona and task
 }
 
 interface AnalysisPanelProps {
@@ -24,6 +36,10 @@ interface AnalysisPanelProps {
   onTaskChange: (value: string) => void;
   isAnalyzing: boolean;
   analysisType: string;
+  onRelevantSectionsAnalysis: () => Promise<void>;
+  onGeneratePodcast: (text: string) => Promise<void>;
+  onNavigateToPage?: (fileName: string, pageNumber: number) => void;
+  onSearchInPDF?: (searchText: string) => Promise<void>;
 }
 
 export function AnalysisPanel({
@@ -34,8 +50,26 @@ export function AnalysisPanel({
   onTaskChange,
   isAnalyzing,
   analysisType,
+  onRelevantSectionsAnalysis,
+  onGeneratePodcast,
+  onNavigateToPage,
+  onSearchInPDF,
 }: AnalysisPanelProps) {
   const [showInputs, setShowInputs] = useState(false);
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+
+  const copyToClipboard = async (text: string, resultId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedStates((prev) => ({ ...prev, [resultId]: true }));
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedStates((prev) => ({ ...prev, [resultId]: false }));
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
 
   const getLoadingMessage = (type: string) => {
     switch (type) {
@@ -62,6 +96,12 @@ export function AnalysisPanel({
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
       case "counterpoints":
         return "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400";
+      case "did_you_know":
+        return "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400";
+      case "relevent_sections":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
+      case "podcast":
+        return "bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-400";
       case "facts":
         return "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400";
       default:
@@ -77,10 +117,16 @@ export function AnalysisPanel({
         return "Key Insights";
       case "counterpoints":
         return "Counterpoints";
+      case "did_you_know":
+        return "Did You Know?";
+      case "relevent_sections":
+        return "Relevant Sections";
+      case "podcast":
+        return "Podcast";
       case "facts":
         return "Did You Know?";
       default:
-        return type;
+        return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " ");
     }
   };
 
@@ -135,6 +181,41 @@ export function AnalysisPanel({
                       </span>
                     </div>
 
+                    {/* Podcast Button for Relevant Sections */}
+                    {result.type === "relevent_sections" &&
+                      typeof result.result === "object" &&
+                      "sub_section_analysis" in result.result &&
+                      result.hasPersonaTask && (
+                        <div className="flex justify-start">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (
+                                typeof result.result === "object" &&
+                                "sub_section_analysis" in result.result
+                              ) {
+                                onGeneratePodcast(
+                                  result.result.sub_section_analysis
+                                    .map(
+                                      (s) =>
+                                        `Document: ${s.document}\nTitle: ${s.section_title}\nContent: ${s.refined_text}`
+                                    )
+                                    .join("\n\n---\n\n")
+                                );
+                              }
+                            }}
+                            disabled={isAnalyzing && analysisType === "podcast"}
+                            className="flex items-center gap-1 text-xs"
+                          >
+                            <Mic className="h-3 w-3" />
+                            {isAnalyzing && analysisType === "podcast"
+                              ? "Generating..."
+                              : "Generate Podcast"}
+                          </Button>
+                        </div>
+                      )}
+
                     <div className="text-xs bg-muted/50 p-3 rounded-md border">
                       <strong className="text-foreground">
                         Selected text:
@@ -146,8 +227,152 @@ export function AnalysisPanel({
 
                     <div className="text-sm">
                       {typeof result.result === "string" ? (
-                        <div className="whitespace-pre-wrap text-foreground leading-relaxed">
-                          {result.result}
+                        <div className="prose prose-sm max-w-none text-foreground">
+                          <ReactMarkdown
+                            components={{
+                              h1: ({ children }) => (
+                                <h1 className="text-lg font-bold text-foreground mb-2 mt-4 first:mt-0">
+                                  {children}
+                                </h1>
+                              ),
+                              h2: ({ children }) => (
+                                <h2 className="text-base font-semibold text-foreground mb-2 mt-3 first:mt-0">
+                                  {children}
+                                </h2>
+                              ),
+                              h3: ({ children }) => (
+                                <h3 className="text-sm font-semibold text-foreground mb-1 mt-2 first:mt-0">
+                                  {children}
+                                </h3>
+                              ),
+                              p: ({ node, children }) => {
+                                // Check if the p tag is inside an li tag
+                                if (
+                                  node.position?.start.line !==
+                                  node.position?.end.line
+                                ) {
+                                  // This is likely a multi-line paragraph, treat as normal
+                                  return (
+                                    <p className="text-foreground leading-relaxed mb-2 last:mb-0">
+                                      {children}
+                                    </p>
+                                  );
+                                }
+                                // This is likely a list item, render inline
+                                return (
+                                  <span className="text-foreground leading-relaxed">
+                                    {children}
+                                  </span>
+                                );
+                              },
+                              ul: ({ children }) => (
+                                <ul className="text-foreground list-disc list-inside space-y-1 mb-2">
+                                  {children}
+                                </ul>
+                              ),
+                              ol: ({ children }) => (
+                                <ol className="text-foreground list-decimal list-inside space-y-1 mb-2">
+                                  {children}
+                                </ol>
+                              ),
+                              li: ({ children }) => (
+                                <li className="text-foreground leading-relaxed">
+                                  {children}
+                                </li>
+                              ),
+                              strong: ({ children }) => (
+                                <strong className="font-semibold text-foreground">
+                                  {children}
+                                </strong>
+                              ),
+                              em: ({ children }) => (
+                                <em className="italic text-foreground">
+                                  {children}
+                                </em>
+                              ),
+                              code: ({ children }) => (
+                                <code className="bg-muted px-1 py-0.5 rounded text-sm font-mono text-foreground">
+                                  {children}
+                                </code>
+                              ),
+                              pre: ({ children }) => (
+                                <pre className="bg-muted p-3 rounded-md overflow-x-auto text-sm font-mono text-foreground mb-2">
+                                  {children}
+                                </pre>
+                              ),
+                              blockquote: ({ children }) => (
+                                <blockquote className="border-l-4 border-muted-foreground pl-4 italic text-muted-foreground mb-2">
+                                  {children}
+                                </blockquote>
+                              ),
+                            }}
+                          >
+                            {result.result}
+                          </ReactMarkdown>
+                        </div>
+                      ) : typeof result.result === "object" &&
+                        "sub_section_analysis" in result.result ? (
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-foreground mb-3">
+                            📋 Relevant Sections Found:
+                          </h4>
+                          {result.result.sub_section_analysis.length > 0 ? (
+                            result.result.sub_section_analysis.map(
+                              (section, index) => (
+                                <div
+                                  key={index}
+                                  className="border border-border rounded-lg p-4 bg-card"
+                                >
+                                  <div className="flex items-center gap-2 justify-between mb-2">
+                                    <button
+                                      onClick={() =>
+                                        onNavigateToPage?.(
+                                          section.document,
+                                          section.page_number
+                                        )
+                                      }
+                                      className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 hover:underline text-left font-medium"
+                                    >
+                                      📄 {section.document} • Page{" "}
+                                      {section.page_number}
+                                    </button>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          onNavigateToPage?.(
+                                            section.document,
+                                            section.page_number
+                                          );
+                                          // Small delay to allow navigation, then search
+                                          setTimeout(() => {
+                                            onSearchInPDF?.(
+                                              section.refined_text
+                                            );
+                                          }, 500);
+                                        }}
+                                        title="Navigate to page and open this text"
+                                      >
+                                        Find
+                                        <Link />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <h5 className="font-semibold text-foreground mb-2">
+                                    {section.section_title}
+                                  </h5>
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {section.refined_text}
+                                  </p>
+                                </div>
+                              )
+                            )
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              No Relevant Sections found.
+                            </p>
+                          )}
                         </div>
                       ) : result.result.type === "podcast" ? (
                         <div className="space-y-4">
@@ -171,8 +396,33 @@ export function AnalysisPanel({
                             <h4 className="font-semibold text-foreground mb-2">
                               📝 Script:
                             </h4>
-                            <div className="whitespace-pre-wrap text-foreground leading-relaxed bg-muted/30 p-3 rounded-md">
-                              {result.result.script}
+                            <div className="prose prose-sm max-w-none bg-muted/30 p-3 rounded-md">
+                              <ReactMarkdown
+                                components={{
+                                  h1: ({ children }) => (
+                                    <h1 className="text-lg font-bold text-foreground mb-2 mt-4 first:mt-0">
+                                      {children}
+                                    </h1>
+                                  ),
+                                  h2: ({ children }) => (
+                                    <h2 className="text-base font-semibold text-foreground mb-2 mt-3 first:mt-0">
+                                      {children}
+                                    </h2>
+                                  ),
+                                  p: ({ children }) => (
+                                    <p className="text-foreground leading-relaxed mb-2 last:mb-0">
+                                      {children}
+                                    </p>
+                                  ),
+                                  strong: ({ children }) => (
+                                    <strong className="font-semibold text-foreground">
+                                      {children}
+                                    </strong>
+                                  ),
+                                }}
+                              >
+                                {result.result.script}
+                              </ReactMarkdown>
                             </div>
                           </div>
                         </div>
@@ -181,6 +431,46 @@ export function AnalysisPanel({
                           {JSON.stringify(result.result)}
                         </div>
                       )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2 border-t border-border/50">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          copyToClipboard(
+                            typeof result.result === "string"
+                              ? result.result
+                              : typeof result.result === "object" &&
+                                "script" in result.result
+                              ? result.result.script
+                              : typeof result.result === "object" &&
+                                "sub_section_analysis" in result.result
+                              ? result.result.sub_section_analysis
+                                  .map(
+                                    (s) =>
+                                      `${s.section_title} (${s.document}, Page ${s.page_number}): ${s.refined_text}`
+                                  )
+                                  .join("\n\n")
+                              : JSON.stringify(result.result),
+                            result.id
+                          )
+                        }
+                        className="flex items-center gap-1 text-xs"
+                      >
+                        {copiedStates[result.id] ? (
+                          <>
+                            <Check className="h-3 w-3" />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3" />
+                            Copy
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -246,8 +536,15 @@ export function AnalysisPanel({
               />
             </div>
 
-            <Button className="w-full" variant="default">
-              Find Relevant Sections
+            <Button
+              className="w-full"
+              variant="default"
+              onClick={onRelevantSectionsAnalysis}
+              disabled={isAnalyzing || !persona.trim() || !task.trim()}
+            >
+              {isAnalyzing && analysisType === "relevent_sections"
+                ? "Analyzing..."
+                : "Find Relevant Sections"}
             </Button>
           </div>
         )}
