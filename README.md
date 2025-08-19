@@ -138,8 +138,8 @@ docker run -v "/path/to/credentials:/credentials" `
   -e AZURE_TTS_KEY=azure_tts_key `
   -e AZURE_TTS_ENDPOINT=azure_tts_endpoint `
   -p 8080:8080 adobe_pdf_analyzer
-
 ```
+My **ADOBE_EMBED_API_KEY**=`03c8c824105148a2af6f264c19905fb7`.
 
 ✅ Running the above command will bring up the application accessible at:
 👉 [http://localhost:8080](http://localhost:8080)
