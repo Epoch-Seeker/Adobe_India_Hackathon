@@ -50,7 +50,7 @@ This platform offers a rich set of features designed to make document analysis i
 
 ### 📖 Interactive PDF Viewer
 
--   **High-Fidelity Rendering**: PDFs are rendered accurately using the **Adobe PDF Embed API**, preserving the original layout and formatting.
+-   **High-Fidelity Rendering**: PDFs are rendered accurately using the **Adobe PDF Embed API**, preserving the original layout and formatting. (Note: This requires an `ADOBE_EMBED_API_KEY` to be set in the environment variables.)
 -   **Zoom and Pan**: Zoom in on details or pan around the document with ease.
 -   **Text Selection**: Select text within the PDF to trigger AI-powered analysis.
 
@@ -90,7 +90,7 @@ This project is built with a combination of modern technologies for the frontend
 
 -   **[FastAPI](https://fastapi.tiangolo.com/)**: A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
 -   **[PyMuPDF](https://pymupdf.readthedocs.io/en/latest/)**: A high-performance Python library for data extraction, analysis, and management of PDF documents.
--   **[Sentence-Transformers](https://www.sbert.net/)**: A Python framework for state-of-the-art sentence, text, and image embeddings. The `all-MiniLM-L6-v2` model is used for creating embeddings.
+-   **[Sentence-Transformers](https://www.sbert.net/)**: A Python framework for state-of-the-art sentence, text, and image embeddings. For embedding, we use the `all-MiniLM-L6-v2` model.
 -   **[FAISS](https://faiss.ai/)**: A library for efficient similarity search and clustering of dense vectors.
 -   **[Google Gemini](https://deepmind.google/technologies/gemini/)**: A family of multimodal AI models from Google used for content generation and analysis.
 -   **[gTTS](https://gtts.readthedocs.io/en/latest/)**: A Python library and CLI tool to interface with Google Text-to-Speech API.
