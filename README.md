@@ -44,7 +44,7 @@ This platform offers a rich set of features designed to make document analysis i
 
 ### 📂 Bulk PDF Upload and Management
 
--   **Upload Multiple PDFs**: Drag and drop or select multiple PDF files at once.
+-   **Upload Multiple PDFs**: select multiple PDF files at once.
 -   **Centralized View**: All uploaded PDFs are displayed in a clean, organized sidebar.
 -   **Easy Navigation**: Switch between different PDFs with a single click.
 -   **Remove PDFs**: Easily remove PDFs you no longer need.
