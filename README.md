@@ -1,74 +1,271 @@
-# Adobe_India_Hackathon
- This repository contains our final submission for the Adobe India Hackathon. The solution focuses on building an AI-powered PDF understanding and analysis system, designed to extract, summarize, and analyze document content with precision.
+# AI-Powered PDF Analysis and Insights Platform
 
----
+This repository contains the source code for an advanced AI-powered platform designed to revolutionize how users interact with PDF documents. The application allows users to upload multiple PDFs, analyze their content using state-of-the-art AI models, and extract valuable insights, summaries, and even generate podcasts from the text.
 
-## ✨ Features  
+This tool is ideal for researchers, students, and professionals who need to quickly understand and synthesize information from multiple documents. By leveraging the power of Large Language Models (LLMs), this platform goes beyond simple keyword search, providing a deep, contextual understanding of the document's content.
 
-- 📂 **Bulk PDF Uploads** – Upload and manage multiple PDFs at once.  
-- 📖 **View Anytime** – Access any uploaded PDF whenever you need.  
-- 💡 **Smart Text Selection** – Highlight text and explore AI-powered insights via a light bulb menu:  
-  - 🔎 Find relevant sections from **all uploaded PDFs** related to the selected text.  
-  - 📑 Jump directly to pages by clicking on generated section titles.  
-  - 📌 Generate **Key Insights** for deeper understanding.  
-  - ❓ Generate **Did You Know** facts.  
-  - ⚖️ Generate **Counterpoints** for balanced perspectives.  
-  - 🎙️ Generate a **Podcast** on the selected text.  
-- 🧑‍🤝‍🧑 **Persona + Task Based Analysis** – Provide a persona and task to get relevant sections across PDFs, and generate a **podcast** tailored to the context.  
-- 🎨 **Dark/Light Theme Support** – Switch themes seamlessly for a better reading experience.  
+## 🏛️ Architecture
 
----
-
-## 🛠️ Tech Stack  
-
-- **Backend**: FastAPI  
-- **Frontend**: React (Vite)  
-- **AI/LLM**: Gemini (Google)  
-- **Text-to-Speech**: Google / Azure TTS  
-- **Dockerized**: CPU-only, AMD64 architecture  
-
----
-
-## ⚡ Setup & Usage  
-
-### 🔨 Build the Docker Image  
-Run in **bash**:  
-```bash
-docker build --platform linux/amd64 -t adobe_pdf_analyzer .
-```
-
-### ▶️ Run the Container
-Run in **Powershell**:
-```bash
-docker run -v "path/to/json_file:/credentials" `
-  -e ADOBE_EMBED_API_KEY=adobe_embed_api_key `
-  -e LLM_PROVIDER=gemini `
-  -e GOOGLE_APPLICATION_CREDENTIALS=/credentials/credential_file.json `
-  -e GEMINI_MODEL=gemini-2.5-flash `
-  -e TTS_PROVIDER=google `
-  -e AZURE_TTS_KEY=azure_tts_key `
-  -e AZURE_TTS_ENDPOINT=azure_tts_endpoint `
-  -p 8080:8080 adobe_pdf_analyzer
+The application is built with a modern, decoupled architecture, consisting of a React frontend and a FastAPI backend. The diagram below illustrates the high-level architecture of the system:
 
 ```
++-----------------+      +----------------------+      +--------------------+
+|                 |      |                      |      |                    |
+|  React Frontend |----->|    FastAPI Backend   |----->|   Google Gemini    |
+| (Vite + TS)     |      | (Python)             |      |   (LLM)            |
+|                 |      |                      |      |                    |
++-----------------+      +----------------------+      +--------------------+
+       |                        |         |                      |
+       |                        |         |                      |
+       v                        v         v                      v
++-----------------+      +----------------------+      +--------------------+
+|                 |      |                      |      |                    |
+|  User Interface |      | PDF Parsing & Mgmt   |      |  Text-to-Speech    |
+| (shadcn/ui)     |      | (PyMuPDF)            |      |  (gTTS, Azure TTS) |
+|                 |      |                      |      |                    |
++-----------------+      +----------------------+      +--------------------+
+                                |         |
+                                |         |
+                                v         v
+                         +----------------------+
+                         |                      |
+                         | Vector Database      |
+                         | (FAISS)              |
+                         |                      |
+                         +----------------------+
+```
 
-✅ Running the above command will bring up the application accessible at:  
-👉 [http://localhost:8080](http://localhost:8080)  
+## ✨ Features
 
-> ⚠️ **Note**:  
-> - The **build command** runs in **bash**.  
-> - The **run command** should be executed in **PowerShell** only.  
+This platform offers a rich set of features designed to make document analysis intuitive and powerful.
 
----
+### 📂 Bulk PDF Upload and Management
 
-## 🧑‍💻 Team Contribution  
+-   **Upload Multiple PDFs**: Drag and drop or select multiple PDF files at once.
+-   **Centralized View**: All uploaded PDFs are displayed in a clean, organized sidebar.
+-   **Easy Navigation**: Switch between different PDFs with a single click.
+-   **Remove PDFs**: Easily remove PDFs you no longer need.
 
-This project is built as part of the **Adobe India Hackathon Final Round**, combining **AI + PDF Intelligence + Interactive UI** to create a powerful research and document analysis tool.  
+*(Screenshot: A sidebar on the left showing a list of uploaded PDF documents, with one of them highlighted as the currently active document.)*
 
----
+### 📖 Interactive PDF Viewer
 
-## 📌 Future Scope  
+-   **High-Fidelity Rendering**: PDFs are rendered accurately, preserving the original layout and formatting.
+-   **Zoom and Pan**: Zoom in on details or pan around the document with ease.
+-   **Text Selection**: Select text within the PDF to trigger AI-powered analysis.
 
-- Advanced semantic search across documents.  
-- Multi-lingual support.  
-- Collaborative annotations and podcast sharing.  
+*(Screenshot: The main area of the screen showing a PDF document. A paragraph of text is highlighted.)*
+
+### 💡 AI-Powered Insights
+
+When you select text in a PDF, a "light bulb" icon appears, offering a menu of AI-powered actions:
+
+-   **Find Relevant Sections**: Searches across all uploaded documents to find sections related to the selected text.
+-   **Generate Key Insights**: Summarizes the selected text and extracts the most important points.
+-   **Generate "Did You Know?" Facts**: Creates interesting and relevant facts based on the selected text.
+-   **Generate Counterpoints**: Provides alternative viewpoints or arguments to the selected text.
+-   **Generate Podcast**: Creates a podcast script from the selected text and generates an audio version.
+
+*(Screenshot: A close-up of the light bulb icon next to the selected text, with a dropdown menu showing the different analysis options.)*
+
+### 🧑‍🤝‍🧑 Persona and Task-Based Analysis
+
+-   **Define a Persona**: Specify a role (e.g., "Financial Analyst," "History Student").
+-   **Define a Task**: Describe the goal (e.g., "Identify market trends," "Summarize the causes of World War II").
+-   **Contextual Analysis**: The AI will analyze the documents from the perspective of the defined persona and task, providing highly relevant insights.
+
+*(Screenshot: A form on the right side of the screen with input fields for "Persona" and "Task". A button below says "Analyze".)*
+
+### 🎨 Dark/Light Theme Support
+
+-   **Toggle Theme**: Switch between light and dark themes to suit your preference and reduce eye strain.
+
+*(Screenshot: A comparison of the UI in both light and dark modes, showcasing the theme support.)*
+
+## 🛠️ Tech Stack
+
+This project is built with a combination of modern technologies for the frontend, backend, and AI components.
+
+### Backend
+
+-   **[FastAPI](https://fastapi.tiangolo.com/)**: A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
+-   **[PyMuPDF](https://pymupdf.readthedocs.io/en/latest/)**: A high-performance Python library for data extraction, analysis, and management of PDF documents.
+-   **[Sentence-Transformers](https://www.sbert.net/)**: A Python framework for state-of-the-art sentence, text, and image embeddings.
+-   **[FAISS](https://faiss.ai/)**: A library for efficient similarity search and clustering of dense vectors.
+-   **[Google Gemini](https://deepmind.google/technologies/gemini/)**: A family of multimodal AI models from Google used for content generation and analysis.
+-   **[gTTS](https://gtts.readthedocs.io/en/latest/)**: A Python library and CLI tool to interface with Google Text-to-Speech API.
+-   **[LangChain](https://www.langchain.com/)**: A framework for developing applications powered by language models.
+
+### Frontend
+
+-   **[React](https://reactjs.org/)**: A JavaScript library for building user interfaces.
+-   **[Vite](https://vitejs.dev/)**: A build tool that aims to provide a faster and leaner development experience for modern web projects.
+-   **[TypeScript](https://www.typescriptlang.org/)**: A typed superset of JavaScript that compiles to plain JavaScript.
+-   **[Tailwind CSS](https://tailwindcss.com/)**: A utility-first CSS framework for rapidly building custom user interfaces.
+-   **[shadcn/ui](https://ui.shadcn.com/)**: A collection of re-usable components built using Radix UI and Tailwind CSS.
+-   **[React Query](https://tanstack.com/query/v3/)**: A library for fetching, caching, and updating data in React applications.
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed and configured:
+
+-   **[Docker](https://www.docker.com/get-started)**: The application is designed to be run in a Docker container.
+-   **[Node.js](https://nodejs.org/en/download/)**: Required for frontend development.
+-   **[Python](https://www.python.org/downloads/)**: Required for backend development.
+-   **Google Cloud Account**:
+    -   A Google Cloud project with the **Vertex AI API** enabled.
+    -   A service account with the necessary permissions to use the Gemini API.
+    -   A JSON key file for the service account.
+-   **Azure Account (Optional)**:
+    -   An Azure account with access to the **Speech Services** if you want to use Azure Text-to-Speech.
+    -   An API key and endpoint for the Azure TTS service.
+
+## 🚀 Local Development Setup
+
+To run the application on your local machine for development, follow these steps:
+
+### Backend
+
+1.  **Navigate to the root directory**:
+    ```bash
+    cd /path/to/your/project
+    ```
+
+2.  **Create a virtual environment**:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+    ```
+
+3.  **Install the required dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Set up environment variables**:
+    Create a `.env` file in the root directory and add the following variables:
+    ```env
+    ADOBE_EMBED_API_KEY=your_adobe_embed_api_key
+    LLM_PROVIDER=gemini
+    GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/credential_file.json
+    GEMINI_MODEL=gemini-1.5-flash
+    TTS_PROVIDER=google
+    AZURE_TTS_KEY=your_azure_tts_key
+    AZURE_TTS_ENDPOINT=your_azure_tts_endpoint
+    ```
+
+5.  **Run the backend server**:
+    ```bash
+    uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+    ```
+    The backend will be available at `http://localhost:8080`.
+
+### Frontend
+
+1.  **Navigate to the frontend directory**:
+    ```bash
+    cd frontend
+    ```
+
+2.  **Install the required dependencies**:
+    ```bash
+    npm install
+    ```
+
+3.  **Run the frontend development server**:
+    ```bash
+    npm run dev
+    ```
+    The frontend will be available at `http://localhost:80` (or another port if 80 is in use).
+
+4.  **Access the application**:
+    Open your browser and navigate to `http://localhost:80` to use the application.
+
+## ⚙️ Environment Variables
+
+The following environment variables are required to run the application. You can set them in a `.env` file in the root directory or as system environment variables.
+
+| Variable                           | Description                                                                                                | Example                                           |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `ADOBE_EMBED_API_KEY`              | Your API key for the Adobe PDF Embed API.                                                                  | `your_adobe_embed_api_key`                        |
+| `LLM_PROVIDER`                     | The LLM provider to use. Currently, only `gemini` is supported.                                            | `gemini`                                          |
+| `GOOGLE_APPLICATION_CREDENTIALS`   | The absolute path to your Google Cloud service account JSON key file.                                      | `/app/credentials/your-service-account-file.json` |
+| `GEMINI_MODEL`                     | The specific Gemini model to use for analysis.                                                             | `gemini-1.5-flash`                                |
+| `TTS_PROVIDER`                     | The text-to-speech provider to use. Can be `google` or `azure`.                                            | `google`                                          |
+| `AZURE_TTS_KEY`                    | Your API key for the Azure Text-to-Speech service. (Required if `TTS_PROVIDER` is `azure`)                 | `your_azure_tts_key`                              |
+| `AZURE_TTS_ENDPOINT`               | The endpoint for your Azure Text-to-Speech service. (Required if `TTS_PROVIDER` is `azure`)                | `https://your-region.tts.speech.microsoft.com/`   |
+
+## 🔗 API Endpoints
+
+The backend provides the following API endpoints:
+
+-   **`POST /upload/`**: Uploads a single PDF file.
+    -   **Request**: `multipart/form-data` with a `file` field containing the PDF.
+    -   **Response**: `{"filename": "string", "path": "string"}`
+
+-   **`POST /analyze/`**: Analyzes multiple documents based on a persona and task.
+    -   **Request**: `multipart/form-data` with `input_json` and `files`.
+    -   **Response**: A JSON object with the analysis results.
+
+-   **`POST /analyze/text/`**: Finds relevant sections in all documents based on a selected text.
+    -   **Request**: `multipart/form-data` with `input_json` containing the selected text.
+    -   **Response**: A JSON object with the relevant sections.
+
+-   **`POST /generate_key_insights/`**: Generates key insights from a selected text.
+    -   **Request**: `multipart/form-data` with `input_json` containing the selected text.
+    -   **Response**: `{"key_insights": ["string"]}`
+
+-   **`POST /did_you_know/`**: Generates "did you know" facts from a selected text.
+    -   **Request**: `multipart/form-data` with `input_json` containing the selected text.
+    -   **Response**: `{"did_you_know": ["string"]}`
+
+-   **`POST /generate_contradictions/`**: Generates counterpoints from a selected text.
+    -   **Request**: `multipart/form-data` with `input_json` containing the selected text.
+    -   **Response**: `{"contradictions": ["string"]}`
+
+-   **`POST /generate_podcast/`**: Generates a podcast from a selected text.
+    -   **Request**: `multipart/form-data` with `input_json` containing the selected text.
+    -   **Response**: `{"podcast_script": "string", "podcast_file": "string"}`
+
+-   **`GET /get_audio/{filename}`**: Retrieves a generated podcast audio file.
+    -   **Request**: The filename of the audio file.
+    -   **Response**: The audio file as `audio/mpeg`.
+
+## 📁 Project Structure
+
+The project is organized into the following directory structure:
+
+```
+.
+├── app/                  # Backend FastAPI application
+│   ├── main.py           # API endpoints and main application logic
+│   ├── analyzer.py       # Semantic search and analysis functions
+│   ├── document_utils.py # PDF parsing and text processing
+│   └── models.py         # Loading AI/ML models
+├── frontend/             # Frontend React application
+│   ├── src/
+│   │   ├── components/   # Reusable UI components
+│   │   ├── pages/        # Main pages of the application
+│   │   ├── App.tsx       # Main application component
+│   │   └── main.tsx      # Entry point for the React application
+│   ├── public/           # Static assets
+│   └── package.json      # Frontend dependencies and scripts
+├── models/               # Pre-trained models
+├── input/                # Uploaded PDF files
+├── output/               # Generated files (e.g., podcasts)
+├── utils/                # Utility scripts
+├── Dockerfile            # Docker configuration
+└── requirements.txt      # Python dependencies
+```
+
+## 🚀 Future Scope
+
+This project has a solid foundation, and there are many exciting possibilities for future development:
+
+-   **Advanced Semantic Search**: Implement a more advanced semantic search engine that can understand natural language queries and search across the entire content of all uploaded documents.
+-   **Multi-lingual Support**: Add support for analyzing documents in multiple languages.
+-   **Collaborative Features**: Allow multiple users to collaborate on the same set of documents, share annotations, and listen to podcasts together.
+-   **User Authentication**: Implement a user authentication system to allow users to save their documents and analysis results.
+-   **Support for More File Types**: Extend the application to support other document formats like `.docx`, `.pptx`, and `.txt`.
+-   **Improved Podcast Generation**: Enhance the podcast generation feature with more voice options, background music, and sound effects.
+-   **Integration with Other Services**: Integrate with other services like Zotero, Mendeley, or other research management tools.
