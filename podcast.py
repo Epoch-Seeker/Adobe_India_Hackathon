@@ -33,7 +33,7 @@ def generate_tts(text: str, voice: str, speaker: str = None) -> AudioSegment:
     
     else:
         # ---- Fallback → gTTS with regional accents ----
-        if speaker == "Alice:
+        if speaker == "Alice":
             # Example: Indian English accent
             tts = gTTS(text=text, lang="en", tld="ca")  
         else:
