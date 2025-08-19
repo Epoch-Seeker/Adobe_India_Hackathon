@@ -120,6 +120,8 @@ This project is built with a combination of modern technologies for the frontend
 
 ## ⚡ Setup & Usage
 
+### 📽️ Demo video link : https://drive.google.com/file/d/1qwZ_VX5jpD8SdT62TXnWR0GWflDfYR3H/view?usp=sharing
+
 ### 🔨 Build the Docker Image
 Run in any terminal (bash, PowerShell, WSL, etc.)::
 ```bash
