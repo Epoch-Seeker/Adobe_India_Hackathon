@@ -1,8 +1,9 @@
-# AI-Powered PDF Analysis and Insights Platform
+# AI-Powered PDF Analysis and Insights Platform 🚀
 
-This repository contains the source code for an advanced AI-powered platform designed to revolutionize how users interact with PDF documents. The application allows users to upload multiple PDFs, analyze their content using state-of-the-art AI models, and extract valuable insights, summaries, and even generate podcasts from the text.
+This repository contains the source code for an **AI-powered platform** developed for the **Adobe India Hackathon Final Round**. The application transforms the way users interact with PDF documents by allowing users to **upload multiple PDFs**, analyze their content using **state-of-the-art AI models**, and extract **insights, summaries, and even generate podcasts** from selected text.  
 
-This tool is ideal for researchers, students, and professionals who need to quickly understand and synthesize information from multiple documents. By leveraging the power of Large Language Models (LLMs), this platform goes beyond simple keyword search, providing a deep, contextual understanding of the document's content.
+Designed for **researchers, students, and professionals**, this tool helps quickly understand and synthesize information from multiple documents. Leveraging **Large Language Models (LLMs)**, it goes beyond simple keyword searches to provide a **deep, contextual understanding** of the content, highlighting relevant sections and generating actionable insights.
+
 
 ## 🏛️ Architecture
 
@@ -39,14 +40,16 @@ The application is built with a modern, decoupled architecture, consisting of a 
 
 This platform offers a rich set of features designed to make document analysis intuitive and powerful.
 
+![App Screenshot](images/start.png)
+
 ### 📂 Bulk PDF Upload and Management
 
--   **Upload Multiple PDFs**: Drag and drop or select multiple PDF files at once.
+-   **Upload Multiple PDFs**: select multiple PDF files at once.
 -   **Centralized View**: All uploaded PDFs are displayed in a clean, organized sidebar.
 -   **Easy Navigation**: Switch between different PDFs with a single click.
 -   **Remove PDFs**: Easily remove PDFs you no longer need.
 
-*(Screenshot: A sidebar on the left showing a list of uploaded PDF documents, with one of them highlighted as the currently active document.)*
+![App Screenshot](images/pdf_upload.png)
 
 ### 📖 Interactive PDF Viewer
 
@@ -54,7 +57,7 @@ This platform offers a rich set of features designed to make document analysis i
 -   **Zoom and Pan**: Zoom in on details or pan around the document with ease.
 -   **Text Selection**: Select text within the PDF to trigger AI-powered analysis.
 
-*(Screenshot: The main area of the screen showing a PDF document. A paragraph of text is highlighted.)*
+![App Screenshot](images/pdf_view.png)
 
 ### 💡 AI-Powered Insights
 
@@ -66,7 +69,7 @@ When you select text in a PDF, a "light bulb" icon appears, offering a menu of A
 -   **Generate Counterpoints**: Provides alternative viewpoints or arguments to the selected text.
 -   **Generate Podcast**: Creates a podcast script from the selected text and generates an audio version.
 
-*(Screenshot: A close-up of the light bulb icon next to the selected text, with a dropdown menu showing the different analysis options.)*
+![App Screenshot](images/lightbulb_features.png)
 
 ### 🧑‍🤝‍🧑 Persona and Task-Based Analysis
 
@@ -74,13 +77,14 @@ When you select text in a PDF, a "light bulb" icon appears, offering a menu of A
 -   **Define a Task**: Describe the goal (e.g., "Identify market trends," "Summarize the causes of World War II").
 -   **Contextual Analysis**: The AI will analyze the documents from the perspective of the defined persona and task, providing highly relevant insights.
 
-*(Screenshot: A form on the right side of the screen with input fields for "Persona" and "Task". A button below says "Analyze".)*
+![App Screenshot](images/persona_role.png)
+
 
 ### 🎨 Dark/Light Theme Support
 
 -   **Toggle Theme**: Switch between light and dark themes to suit your preference and reduce eye strain.
 
-*(Screenshot: A comparison of the UI in both light and dark modes, showcasing the theme support.)*
+![App Screenshot](images/theme.png)
 
 ## 🛠️ Tech Stack
 
@@ -104,24 +108,33 @@ This project is built with a combination of modern technologies for the frontend
 -   **[Tailwind CSS](https://tailwindcss.com/)**: A utility-first CSS framework for rapidly building custom user interfaces.
 -   **[shadcn/ui](https://ui.shadcn.com/)**: A collection of re-usable components built using Radix UI and Tailwind CSS.
 -   **[React Query](https://tanstack.com/query/v3/)**: A library for fetching, caching, and updating data in React applications.
+-   **[Adobe Embed API](https://www.adobe.com/devnet-docs/dcsdk_io/index.html)**: Used to render and view PDFs interactively within the web application.
+
+### Embedding Model: `all-MiniLM-L6-v2`  
+- This is a **lightweight, high-performance sentence transformer** from the [Sentence-Transformers library](https://www.sbert.net/). It converts text into **dense vector embeddings** that capture semantic          meaning, enabling the platform to:  
+- Perform **semantic search** across all uploaded PDFs.  
+- Retrieve **relevant sections** based on contextual similarity rather than exact keywords.  
+- Support **fast and efficient similarity computations** for real-time user queries.  
+- Maintain **small memory footprint** while providing high accuracy for sentence-level embeddings.  
+
 
 ## ⚡ Setup & Usage
 
 ### 🔨 Build the Docker Image
-Run in **bash**:
+Run in any terminal (bash, PowerShell, WSL, etc.)::
 ```bash
 docker build --platform linux/amd64 -t adobe_pdf_analyzer .
 ```
 
 ### ▶️ Run the Container
-Run in **Powershell**:
+**Note**: Do not run this command in Git Bash—it will not work. Use PowerShell, CMD, or Windows Terminal.:
 ```bash
 docker run -v "/path/to/credentials:/credentials" `
   -e ADOBE_EMBED_API_KEY=adobe_embed_api_key `
   -e LLM_PROVIDER=gemini `
   -e GOOGLE_APPLICATION_CREDENTIALS=/credentials/adbe-gcp.json `
   -e GEMINI_MODEL=gemini-2.5-flash `
-  -e TTS_PROVIDER=google or azure `
+  -e TTS_PROVIDER=google or azure`
   -e AZURE_TTS_KEY=azure_tts_key `
   -e AZURE_TTS_ENDPOINT=azure_tts_endpoint `
   -p 8080:8080 adobe_pdf_analyzer
@@ -140,8 +153,8 @@ The following environment variables are required to run the application. You can
 | `ADOBE_EMBED_API_KEY`              | Your API key for the Adobe PDF Embed API.                                                                  | `your_adobe_embed_api_key`                        |
 | `LLM_PROVIDER`                     | The LLM provider to use. Currently, only `gemini` is supported.                                            | `gemini`                                          |
 | `GOOGLE_APPLICATION_CREDENTIALS`   | The absolute path to your Google Cloud service account JSON key file.                                      | `/app/credentials/your-service-account-file.json` |
-| `GEMINI_MODEL`                     | The specific Gemini model to use for analysis.                                                             | `gemini-1.5-flash`                                |
-| `TTS_PROVIDER`                     | The text-to-speech provider to use. Can be `google` or `azure`.                                            | `google`                                          |
+| `GEMINI_MODEL`                     | The specific Gemini model to use for analysis.                                                             | `gemini-2.5-flash`                                |
+| `TTS_PROVIDER`                     | The text-to-speech provider to use. Can be `google` or `azure`.                                            | `google or azure`                                          |
 | `AZURE_TTS_KEY`                    | Your API key for the Azure Text-to-Speech service. (Required if `TTS_PROVIDER` is `azure`)                 | `your_azure_tts_key`                              |
 | `AZURE_TTS_ENDPOINT`               | The endpoint for your Azure Text-to-Speech service. (Required if `TTS_PROVIDER` is `azure`)                | `https://your-region.tts.speech.microsoft.com/`   |
 
@@ -200,6 +213,7 @@ The project is organized into the following directory structure:
 │   │   └── main.tsx      # Entry point for the React application
 │   ├── public/           # Static assets
 │   └── package.json      # Frontend dependencies and scripts
+├── images/               # Store readme images
 ├── models/               # Pre-trained models
 ├── input/                # Uploaded PDF files
 ├── output/               # Generated files (e.g., podcasts)

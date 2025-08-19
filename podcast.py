@@ -47,7 +47,6 @@ def generate_tts(text: str, voice: str, speaker: str = None) -> AudioSegment:
 
     # return out_path
 
-
 def create_podcast_from_script(script_text: str, output_file: str):
     """
     Podcast generator for exactly 2 speakers:
@@ -65,48 +64,36 @@ def create_podcast_from_script(script_text: str, output_file: str):
             continue
 
         speaker, text = line.split(":", 1)
-        speaker_clean = re.sub(r"[*]+", "", speaker).strip().lower()
+        speaker_clean = speaker.strip().lower()
         text = text.strip()
 
-        if speaker_clean in ["speaker 1", "s1"]:
-            dialogue.append(("Speaker 1", text))
-        elif speaker_clean in ["speaker 2", "s2"]:
-            dialogue.append(("Speaker 2", text))
+        if speaker_clean in ["alice"]:
+            dialogue.append(("Alice", text))
+        elif speaker_clean in ["bob"]:
+            dialogue.append(("Bob", text))
         else:
             print(f"⚠️ Skipping unrecognized speaker: {speaker}")
+
+    if not dialogue:
+        raise RuntimeError("No dialogue lines parsed!")
 
     segments = []
 
     # Generate audio per line, keeping order
     for speaker, text in dialogue:
         try:
-            if speaker == "Speaker 1":
-                voice = "en-US-GuyNeural"
-                # print("Guy selected")
-            else:
-                # print("Jenny Selected")
-                voice = "en-US-JennyNeural"
-
+            voice = "en-US-JennyNeural" if speaker == "Alice" else "en-US-GuyNeural"
             seg = generate_tts(text, voice, speaker=speaker)
-            if seg:  # only append if valid
+            if seg:
                 segments.append(seg)
-                # Add a short pause between speakers
-                segments.append(AudioSegment.silent(duration=400))
+                segments.append(AudioSegment.silent(duration=400))  # short pause
             else:
                 print(f"⚠️ Skipping empty segment for: {speaker} - {text}")
-
         except Exception as e:
             print(f"❌ Error generating TTS for {speaker}: {e}")
             continue
 
-    if not segments:
-        raise RuntimeError("No dialogue lines parsed!")
-
     # Merge into final audio
-    final_podcast = segments[0]
-    for seg in segments[1:]:
-        final_podcast += seg
-
+    final_podcast = sum(segments[1:], segments[0])
     final_podcast.export(output_file, format="mp3")
     return output_file
-
