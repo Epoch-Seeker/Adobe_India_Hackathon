@@ -5,21 +5,27 @@ uvicorn[standard]==0.30.1
 # PDF processing
 PyMuPDF==1.24.7
 
-# ML / NLP
+# ML / NLP (CPU only)
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.3.1+cpu
 torchvision==0.18.1+cpu
 torchaudio==2.3.1+cpu
---extra-index-url https://download.pytorch.org/whl/cpu
 
 transformers==4.42.4
-sentence-transformers==3.0.1
+sentence-transformers==5.0.0
 
-# LangChain + Google Generative AI
+# LangChain, Google SDK, and Authentication
+# This setup ensures compatible versions are installed. `langchain-google-genai`
+# will manage the version of `google-generativeai` for you.
 langchain==0.2.11
-langchain-google-genai==1.0.6
+langchain-google-genai==1.0.7
+google-auth==2.40.2
 
 # Audio
 gTTS==2.5.1
 pydub==0.25.1
 
-nltk
+# Text processing
+nltk==3.8.1
+python-dotenv==1.0.1
+faiss-cpu==1.8.0

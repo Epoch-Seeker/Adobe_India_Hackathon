@@ -1,17 +1,13 @@
 import os
-from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage
-
-# Load environment variables from .env
-load_dotenv()
+import google.auth
+import google.generativeai as genai
 
 """
 Unified LLM Module (Google Gemini only)
 
 Functions available:
 - get_llm() -> returns an initialized Gemini chat model
-- get_llm_response(messages) -> quick raw chat interface
+- get_llm_response(prompt_text) -> quick raw chat interface
 - generate_podcast_script(user_text, combined_text)
 - generate_did_you_know(text)
 - model_answer(base_query, chunks)
@@ -19,29 +15,54 @@ Functions available:
 - generate_counterpoints(text)
 """
 
+
 # ---------------- Core Model Selector ---------------- #
+
 def get_llm():
-    api_key = os.getenv("GOOGLE_API_KEY")
-    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    """
+    Initializes the Vertex AI client using Application Default Credentials
+    and returns a Gemini model instance.
+    """
+    try:
+        # The google-auth library automatically finds the credentials from the
+        # GOOGLE_APPLICATION_CREDENTIALS environment variable.
+        credentials, project_id = google.auth.default()
 
-    if not api_key and not credentials_path:
-        raise ValueError("Either GOOGLE_API_KEY or GOOGLE_APPLICATION_CREDENTIALS must be set.")
+        # If the project ID isn't set in the credentials, get it from an env var.
+        project = project_id or os.getenv("GOOGLE_CLOUD_PROJECT")
+        if not project:
+            raise ValueError("Google Cloud Project ID not found. Set it in your credentials or via the GOOGLE_CLOUD_PROJECT environment variable.")
 
-    if api_key:
-        return ChatGoogleGenerativeAI(model=model_name, google_api_key=api_key, temperature=0.7)
-    else:
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
-        return ChatGoogleGenerativeAI(model=model_name, temperature=0.7)
+        # Configure the client with the credentials.
+        genai.configure(
+            credentials=credentials,
+        )
 
+        # Initialize and return the model. Using a specific version like 'gemini-1.5-flash-001' is recommended.
+        model = genai.GenerativeModel(
+            model_name='gemini-2.5-flash',
+            system_instruction="You are a helpful assistant." # Optional system instruction
+        )
+        
+        return model
 
-def get_llm_response(messages):
-    llm = get_llm()
-    response = llm.invoke(messages)
-    return response.content
-
+    except Exception as e:
+        print(f"An error occurred while initializing the LLM: {e}")
+        return None
 
 # ---------------- Helper Functions ---------------- #
+
+def get_llm_response(prompt_text: str) -> str:
+    """
+    Performs a quick raw chat request with the LLM.
+    """
+    llm = get_llm()
+    if not llm:
+        return "Error: Could not initialize the language model."
+    
+    response = llm.generate_content(prompt_text)
+    return response.text.strip()
+
 def generate_podcast_script(user_text: str, combined_text: str) -> str:
     prompt = f"""
     You are a podcast scriptwriter.
@@ -61,9 +82,11 @@ def generate_podcast_script(user_text: str, combined_text: str) -> str:
     End the script naturally.
     """
     llm = get_llm()
-    response = llm.invoke([HumanMessage(content=prompt)])
-    return response.content
-
+    if not llm:
+        return "Error: Could not initialize the language model."
+        
+    response = llm.generate_content(prompt)
+    return response.text
 
 def generate_did_you_know(text: str):
     prompt = f"""
@@ -80,9 +103,11 @@ def generate_did_you_know(text: str):
     Text: {text}
     """
     llm = get_llm()
-    response = llm.invoke([HumanMessage(content=prompt)])
-    return response.content.strip()
-
+    if not llm:
+        return "Error: Could not initialize the language model."
+        
+    response = llm.generate_content(prompt)
+    return response.text.strip()
 
 def model_answer(base_query: str, chunks: list) -> str:
     all_titles = [chunk["title"] for chunk in chunks if chunk.get("title")]
@@ -100,9 +125,11 @@ def model_answer(base_query: str, chunks: list) -> str:
         f"Now, give your answer:"
     )
     llm = get_llm()
-    response = llm.invoke([HumanMessage(content=prompt)])
-    return response.content.strip()
-
+    if not llm:
+        return "Error: Could not initialize the language model."
+        
+    response = llm.generate_content(prompt)
+    return response.text.strip()
 
 def generate_key_insights(text: str):
     prompt = f"""
@@ -116,9 +143,11 @@ def generate_key_insights(text: str):
     {text}
     """
     llm = get_llm()
-    response = llm.invoke([HumanMessage(content=prompt)])
-    return response.content.strip()
-
+    if not llm:
+        return "Error: Could not initialize the language model."
+        
+    response = llm.generate_content(prompt)
+    return response.text.strip()
 
 def generate_counterpoints(text: str):
     prompt = f"""
@@ -132,6 +161,9 @@ def generate_counterpoints(text: str):
     {text}
     """
     llm = get_llm()
-    response = llm.invoke([HumanMessage(content=prompt)])
-    return response.content.strip()
+    if not llm:
+        return "Error: Could not initialize the language model."
+        
+    response = llm.generate_content(prompt)
+    return response.text.strip()
 

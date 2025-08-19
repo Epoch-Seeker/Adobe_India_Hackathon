@@ -316,10 +316,10 @@ def get_audio(filename: str):
         return FileResponse(file_path, media_type="audio/mpeg")
     return JSONResponse({"error": "File not found"}, status_code=404)
 
-# # Serve assets
-# app.mount("/assets", StaticFiles(directory="frontend_build/assets"), name="assets")
+# # # Serve assets
+app.mount("/assets", StaticFiles(directory="frontend_build/assets"), name="assets")
 
-# # Serve main index.html
-# @app.get("/")
-# async def serve_index():
-#     return FileResponse("frontend_build/index.html")
+# Serve main index.html
+@app.get("/")
+async def serve_index():
+    return FileResponse("frontend_build/index.html")
