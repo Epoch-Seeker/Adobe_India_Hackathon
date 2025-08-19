@@ -134,7 +134,7 @@ docker run -v "path/to/json_file:/credentials" `
   -e LLM_PROVIDER=gemini `
   -e GOOGLE_APPLICATION_CREDENTIALS=/credentials/credential_file.json `
   -e GEMINI_MODEL=gemini-2.5-flash `
-  -e TTS_PROVIDER=google `
+  -e TTS_PROVIDER=google or azure`
   -e AZURE_TTS_KEY=azure_tts_key `
   -e AZURE_TTS_ENDPOINT=azure_tts_endpoint `
   -p 8080:8080 adobe_pdf_analyzer
@@ -153,8 +153,8 @@ The following environment variables are required to run the application. You can
 | `ADOBE_EMBED_API_KEY`              | Your API key for the Adobe PDF Embed API.                                                                  | `your_adobe_embed_api_key`                        |
 | `LLM_PROVIDER`                     | The LLM provider to use. Currently, only `gemini` is supported.                                            | `gemini`                                          |
 | `GOOGLE_APPLICATION_CREDENTIALS`   | The absolute path to your Google Cloud service account JSON key file.                                      | `/app/credentials/your-service-account-file.json` |
-| `GEMINI_MODEL`                     | The specific Gemini model to use for analysis.                                                             | `gemini-1.5-flash`                                |
-| `TTS_PROVIDER`                     | The text-to-speech provider to use. Can be `google` or `azure`.                                            | `google`                                          |
+| `GEMINI_MODEL`                     | The specific Gemini model to use for analysis.                                                             | `gemini-2.5-flash`                                |
+| `TTS_PROVIDER`                     | The text-to-speech provider to use. Can be `google` or `azure`.                                            | `google or azure`                                          |
 | `AZURE_TTS_KEY`                    | Your API key for the Azure Text-to-Speech service. (Required if `TTS_PROVIDER` is `azure`)                 | `your_azure_tts_key`                              |
 | `AZURE_TTS_ENDPOINT`               | The endpoint for your Azure Text-to-Speech service. (Required if `TTS_PROVIDER` is `azure`)                | `https://your-region.tts.speech.microsoft.com/`   |
 
@@ -213,6 +213,7 @@ The project is organized into the following directory structure:
 │   │   └── main.tsx      # Entry point for the React application
 │   ├── public/           # Static assets
 │   └── package.json      # Frontend dependencies and scripts
+├── images/               # Store readme images
 ├── models/               # Pre-trained models
 ├── input/                # Uploaded PDF files
 ├── output/               # Generated files (e.g., podcasts)
