@@ -40,6 +40,8 @@ The application is built with a modern, decoupled architecture, consisting of a 
 
 This platform offers a rich set of features designed to make document analysis intuitive and powerful.
 
+![App Screenshot](images/start.png)
+
 ### 📂 Bulk PDF Upload and Management
 
 -   **Upload Multiple PDFs**: Drag and drop or select multiple PDF files at once.
@@ -47,7 +49,7 @@ This platform offers a rich set of features designed to make document analysis i
 -   **Easy Navigation**: Switch between different PDFs with a single click.
 -   **Remove PDFs**: Easily remove PDFs you no longer need.
 
-*(Screenshot: A sidebar on the left showing a list of uploaded PDF documents, with one of them highlighted as the currently active document.)*
+![App Screenshot](images/pdf_upload.png)
 
 ### 📖 Interactive PDF Viewer
 
@@ -55,7 +57,7 @@ This platform offers a rich set of features designed to make document analysis i
 -   **Zoom and Pan**: Zoom in on details or pan around the document with ease.
 -   **Text Selection**: Select text within the PDF to trigger AI-powered analysis.
 
-*(Screenshot: The main area of the screen showing a PDF document. A paragraph of text is highlighted.)*
+![App Screenshot](images/pdf_view.png)
 
 ### 💡 AI-Powered Insights
 
@@ -67,7 +69,7 @@ When you select text in a PDF, a "light bulb" icon appears, offering a menu of A
 -   **Generate Counterpoints**: Provides alternative viewpoints or arguments to the selected text.
 -   **Generate Podcast**: Creates a podcast script from the selected text and generates an audio version.
 
-*(Screenshot: A close-up of the light bulb icon next to the selected text, with a dropdown menu showing the different analysis options.)*
+![App Screenshot](images/lightbulb_features.png)
 
 ### 🧑‍🤝‍🧑 Persona and Task-Based Analysis
 
@@ -75,14 +77,14 @@ When you select text in a PDF, a "light bulb" icon appears, offering a menu of A
 -   **Define a Task**: Describe the goal (e.g., "Identify market trends," "Summarize the causes of World War II").
 -   **Contextual Analysis**: The AI will analyze the documents from the perspective of the defined persona and task, providing highly relevant insights.
 
-*(Screenshot: A form on the right side of the screen with input fields for "Persona" and "Task". A button below says "Analyze".)*
+![App Screenshot](images/persona_role.png)
 
 
 ### 🎨 Dark/Light Theme Support
 
 -   **Toggle Theme**: Switch between light and dark themes to suit your preference and reduce eye strain.
 
-*(Screenshot: A comparison of the UI in both light and dark modes, showcasing the theme support.)*
+![App Screenshot](images/theme.png)
 
 ## 🛠️ Tech Stack
 
