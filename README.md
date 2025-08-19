@@ -121,13 +121,13 @@ This project is built with a combination of modern technologies for the frontend
 ## ⚡ Setup & Usage
 
 ### 🔨 Build the Docker Image
-Run in **bash**:
+Run in any terminal (bash, PowerShell, WSL, etc.)::
 ```bash
 docker build --platform linux/amd64 -t adobe_pdf_analyzer .
 ```
 
 ### ▶️ Run the Container
-Run in **Powershell**:
+**Note**: Do not run this command in Git Bash—it will not work. Use PowerShell, CMD, or Windows Terminal.:
 ```bash
 docker run -v "path/to/json_file:/credentials" `
   -e ADOBE_EMBED_API_KEY=adobe_embed_api_key `
