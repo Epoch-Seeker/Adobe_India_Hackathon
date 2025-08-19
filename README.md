@@ -50,7 +50,7 @@ This platform offers a rich set of features designed to make document analysis i
 
 ### 📖 Interactive PDF Viewer
 
--   **High-Fidelity Rendering**: PDFs are rendered accurately, preserving the original layout and formatting.
+-   **High-Fidelity Rendering**: PDFs are rendered accurately using the **Adobe PDF Embed API**, preserving the original layout and formatting.
 -   **Zoom and Pan**: Zoom in on details or pan around the document with ease.
 -   **Text Selection**: Select text within the PDF to trigger AI-powered analysis.
 
@@ -90,7 +90,7 @@ This project is built with a combination of modern technologies for the frontend
 
 -   **[FastAPI](https://fastapi.tiangolo.com/)**: A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
 -   **[PyMuPDF](https://pymupdf.readthedocs.io/en/latest/)**: A high-performance Python library for data extraction, analysis, and management of PDF documents.
--   **[Sentence-Transformers](https://www.sbert.net/)**: A Python framework for state-of-the-art sentence, text, and image embeddings.
+-   **[Sentence-Transformers](https://www.sbert.net/)**: A Python framework for state-of-the-art sentence, text, and image embeddings. The `all-MiniLM-L6-v2` model is used for creating embeddings.
 -   **[FAISS](https://faiss.ai/)**: A library for efficient similarity search and clustering of dense vectors.
 -   **[Google Gemini](https://deepmind.google/technologies/gemini/)**: A family of multimodal AI models from Google used for content generation and analysis.
 -   **[gTTS](https://gtts.readthedocs.io/en/latest/)**: A Python library and CLI tool to interface with Google Text-to-Speech API.
@@ -105,81 +105,31 @@ This project is built with a combination of modern technologies for the frontend
 -   **[shadcn/ui](https://ui.shadcn.com/)**: A collection of re-usable components built using Radix UI and Tailwind CSS.
 -   **[React Query](https://tanstack.com/query/v3/)**: A library for fetching, caching, and updating data in React applications.
 
-## 📋 Prerequisites
+## ⚡ Setup & Usage
 
-Before you begin, ensure you have the following installed and configured:
+### 🔨 Build the Docker Image
+Run in **bash**:
+```bash
+docker build --platform linux/amd64 -t adobe_pdf_analyzer .
+```
 
--   **[Docker](https://www.docker.com/get-started)**: The application is designed to be run in a Docker container.
--   **[Node.js](https://nodejs.org/en/download/)**: Required for frontend development.
--   **[Python](https://www.python.org/downloads/)**: Required for backend development.
--   **Google Cloud Account**:
-    -   A Google Cloud project with the **Vertex AI API** enabled.
-    -   A service account with the necessary permissions to use the Gemini API.
-    -   A JSON key file for the service account.
--   **Azure Account (Optional)**:
-    -   An Azure account with access to the **Speech Services** if you want to use Azure Text-to-Speech.
-    -   An API key and endpoint for the Azure TTS service.
+### ▶️ Run the Container
+Run in **Powershell**:
+```bash
+docker run -v "path/to/json_file:/credentials" `
+  -e ADOBE_EMBED_API_KEY=adobe_embed_api_key `
+  -e LLM_PROVIDER=gemini `
+  -e GOOGLE_APPLICATION_CREDENTIALS=/credentials/credential_file.json `
+  -e GEMINI_MODEL=gemini-2.5-flash `
+  -e TTS_PROVIDER=google `
+  -e AZURE_TTS_KEY=azure_tts_key `
+  -e AZURE_TTS_ENDPOINT=azure_tts_endpoint `
+  -p 8080:8080 adobe_pdf_analyzer
 
-## 🚀 Local Development Setup
+```
 
-To run the application on your local machine for development, follow these steps:
-
-### Backend
-
-1.  **Navigate to the root directory**:
-    ```bash
-    cd /path/to/your/project
-    ```
-
-2.  **Create a virtual environment**:
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-    ```
-
-3.  **Install the required dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Set up environment variables**:
-    Create a `.env` file in the root directory and add the following variables:
-    ```env
-    ADOBE_EMBED_API_KEY=your_adobe_embed_api_key
-    LLM_PROVIDER=gemini
-    GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/credential_file.json
-    GEMINI_MODEL=gemini-1.5-flash
-    TTS_PROVIDER=google
-    AZURE_TTS_KEY=your_azure_tts_key
-    AZURE_TTS_ENDPOINT=your_azure_tts_endpoint
-    ```
-
-5.  **Run the backend server**:
-    ```bash
-    uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
-    ```
-    The backend will be available at `http://localhost:8080`.
-
-### Frontend
-
-1.  **Navigate to the frontend directory**:
-    ```bash
-    cd frontend
-    ```
-
-2.  **Install the required dependencies**:
-    ```bash
-    npm install
-    ```
-
-3.  **Run the frontend development server**:
-    ```bash
-    npm run dev
-    ```
-    The frontend will be available at `http://localhost:80` (or another port if 80 is in use).
-
-4.  **Access the application**:
-    Open your browser and navigate to `http://localhost:80` to use the application.
+✅ Running the above command will bring up the application accessible at:
+👉 [http://localhost:8080](http://localhost:8080)
 
 ## ⚙️ Environment Variables
 
