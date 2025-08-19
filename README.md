@@ -1,8 +1,9 @@
-# AI-Powered PDF Analysis and Insights Platform
+# AI-Powered PDF Analysis and Insights Platform 🚀
 
-This repository contains the source code for an advanced AI-powered platform designed to revolutionize how users interact with PDF documents. The application allows users to upload multiple PDFs, analyze their content using state-of-the-art AI models, and extract valuable insights, summaries, and even generate podcasts from the text.
+This repository contains the source code for an **AI-powered platform** developed for the **Adobe India Hackathon Final Round**. The application transforms the way users interact with PDF documents by allowing users to **upload multiple PDFs**, analyze their content using **state-of-the-art AI models**, and extract **insights, summaries, and even generate podcasts** from selected text.  
 
-This tool is ideal for researchers, students, and professionals who need to quickly understand and synthesize information from multiple documents. By leveraging the power of Large Language Models (LLMs), this platform goes beyond simple keyword search, providing a deep, contextual understanding of the document's content.
+Designed for **researchers, students, and professionals**, this tool helps quickly understand and synthesize information from multiple documents. Leveraging **Large Language Models (LLMs)**, it goes beyond simple keyword searches to provide a **deep, contextual understanding** of the content, highlighting relevant sections and generating actionable insights.
+
 
 ## 🏛️ Architecture
 
@@ -76,6 +77,7 @@ When you select text in a PDF, a "light bulb" icon appears, offering a menu of A
 
 *(Screenshot: A form on the right side of the screen with input fields for "Persona" and "Task". A button below says "Analyze".)*
 
+
 ### 🎨 Dark/Light Theme Support
 
 -   **Toggle Theme**: Switch between light and dark themes to suit your preference and reduce eye strain.
@@ -104,6 +106,15 @@ This project is built with a combination of modern technologies for the frontend
 -   **[Tailwind CSS](https://tailwindcss.com/)**: A utility-first CSS framework for rapidly building custom user interfaces.
 -   **[shadcn/ui](https://ui.shadcn.com/)**: A collection of re-usable components built using Radix UI and Tailwind CSS.
 -   **[React Query](https://tanstack.com/query/v3/)**: A library for fetching, caching, and updating data in React applications.
+-   **[Adobe Embed API](https://www.adobe.com/devnet-docs/dcsdk_io/index.html)**: Used to render and view PDFs interactively within the web application.
+
+### Embedding Model: `all-MiniLM-L6-v2`  
+- This is a **lightweight, high-performance sentence transformer** from the [Sentence-Transformers library](https://www.sbert.net/). It converts text into **dense vector embeddings** that capture semantic          meaning, enabling the platform to:  
+- Perform **semantic search** across all uploaded PDFs.  
+- Retrieve **relevant sections** based on contextual similarity rather than exact keywords.  
+- Support **fast and efficient similarity computations** for real-time user queries.  
+- Maintain **small memory footprint** while providing high accuracy for sentence-level embeddings.  
+
 
 ## ⚡ Setup & Usage
 
