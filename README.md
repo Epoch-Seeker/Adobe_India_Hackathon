@@ -116,12 +116,12 @@ docker build --platform linux/amd64 -t adobe_pdf_analyzer .
 ### ▶️ Run the Container
 Run in **Powershell**:
 ```bash
-docker run -v "path/to/json_file:/credentials" `
+docker run -v "/path/to/credentials:/credentials" `
   -e ADOBE_EMBED_API_KEY=adobe_embed_api_key `
   -e LLM_PROVIDER=gemini `
-  -e GOOGLE_APPLICATION_CREDENTIALS=/credentials/credential_file.json `
+  -e GOOGLE_APPLICATION_CREDENTIALS=/credentials/adbe-gcp.json `
   -e GEMINI_MODEL=gemini-2.5-flash `
-  -e TTS_PROVIDER=google `
+  -e TTS_PROVIDER=google or azure `
   -e AZURE_TTS_KEY=azure_tts_key `
   -e AZURE_TTS_ENDPOINT=azure_tts_endpoint `
   -p 8080:8080 adobe_pdf_analyzer
